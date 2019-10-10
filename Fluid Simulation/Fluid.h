@@ -36,5 +36,5 @@ public:
 	void advect(int b, float* d, float* d0, float* velocX, float* velocY, float dt, int N);
 	void set_bnd(int b, float* x, int N);
 	int IX(int x, int y);
-	void render(Vector2f const& p, RenderWindow& window);
+	void render(RenderWindow& window);
 };

@@ -6,13 +6,13 @@ using namespace std;
 using namespace sf;
 
 int main() {
-	const int width = 400;
-	const int height = 400;
-	const int N = 2;
-	const float dt = 0.000003;
+	const int width = 300;
+	const int height = 300;
+	const int N = 30;
+	const float dt = 0.1;
 
 	RenderWindow window(sf::VideoMode(width, height), "Fluid Simulation");
-	Fluid fluid(N, 0, 0, dt);
+	Fluid fluid(N, 0, 0.0000001, dt);
 
 	Vector2f mousePos, mousePrevPos, mouseSpeed;
 
@@ -34,12 +34,12 @@ int main() {
 		fluid.step();
 
 		if (LMB) {
-			fluid.addDensity(mousePos.x, mousePos.y, 100);
+			fluid.addDensity(mousePos.x/10, mousePos.y/10, 100);
 			float amtX = mousePos.x - mousePrevPos.x;
 			float amtY = mousePos.y - mousePrevPos.y;
-			fluid.addVelocity(mousePos.x, mousePos.y, amtX, amtY);
-			fluid.render(mousePos, window);
+			fluid.addVelocity(mousePos.x/10, mousePos.y/10, amtX, amtY);
 		}
+		fluid.render(window);
 		//window.clear(Color::Black);
 		//window.clear(Color::Red);
 

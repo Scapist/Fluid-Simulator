@@ -9,7 +9,8 @@ Fluid::Fluid(int size, int diffusion, int viscosity, float dt) {
 	this->visc = viscosity;
 
 	this->s = new float[N * N];
-	this->density = new float[N * N];
+	this->density = new float[N * N]();
+	
 
 	this->Vx = new float[N * N];
 	this->Vy = new float[N * N];
@@ -64,8 +65,18 @@ void Fluid::step() {
 
 void Fluid::addDensity(int x, int y, float amount) {
 	int index = IX(x, y);
-	this->density[index] += amount;
+	if (this->density[index] > 255) {
+		this->density[index] = 255;
+	}
+	else if (this->density[index] < 0) {
+		this->density[index] = 255;
+	} else {
+		this->density[index] += amount;
+
+	}
+
 	cout << density[IX(x, y)] << endl;
+	
 
 }
 
@@ -80,20 +91,17 @@ void Fluid::addVelocity(int x, int y, float amountX, float amountY) {
 //static and not part of the class
 void Fluid::lin_solve(int b, float* x, float* x0, float a, float c, int iter, int N) {
 	// make iter and N const
-
 	float cRecip = 1.0 / c;
 	for (int k = 0; k < iter; k++) {
-		for (int m = 1; m < N - 1; m++) {
-			for (int j = 1; j < N - 1; j++) {
-				for (int i = 1; i < N - 1; i++) {
-					x[IX(i, j)] =
-						(x0[IX(i, j)]
-							+ a * (x[IX(i + 1, j)]
-								+ x[IX(i - 1, j)]
-								+ x[IX(i, j + 1)]
-								+ x[IX(i, j - 1)]
-								)) * cRecip;
-				}
+		for (int j = 1; j < N - 1; j++) {
+			for (int i = 1; i < N - 1; i++) {
+				x[IX(i, j)] =
+					(x0[IX(i, j)]
+						+ a * (x[IX(i + 1, j)]
+							+ x[IX(i - 1, j)]
+							+ x[IX(i, j + 1)]
+							+ x[IX(i, j - 1)]
+							)) * cRecip;
 			}
 		}
 		set_bnd(b, x, N);
@@ -109,17 +117,15 @@ void Fluid::diffuse(int b, float* x, float* x0, float diff, float dt, int iter, 
 
 //static??? not part of the class and iter and N should be const
 void Fluid::project(float* velocX, float* velocY, float* p, float* div, int iter, int N) {
-	for (int k = 1; k < N - 1; k++) {
-		for (int j = 1; j < N - 1; j++) {
-			for (int i = 1; i < N - 1; i++) {
-				div[IX(i, j)] = -0.5f * (
-					velocX[IX(i + 1, j)]
-					- velocX[IX(i - 1, j)]
-					+ velocY[IX(i, j + 1)]
-					- velocY[IX(i, j - 1)]
-					) / N;
-				p[IX(i, j)] = 0;
-			}
+	for (int j = 1; j < N - 1; j++) {
+		for (int i = 1; i < N - 1; i++) {
+			div[IX(i, j)] = -0.5f * (
+				velocX[IX(i + 1, j)]
+				- velocX[IX(i - 1, j)]
+				+ velocY[IX(i, j + 1)]
+				- velocY[IX(i, j - 1)]
+				) / N;
+			p[IX(i, j)] = 0;
 		}
 	}
 	set_bnd(0, div, N);
@@ -228,20 +234,29 @@ void Fluid::set_bnd(int b, float* x, int N) {
 
 }
 
-
+int clamp(int value, int min, int max) {
+	if (value > max)
+		return max;
+	if (value < min)
+		return min;
+	return value;
+}
 int Fluid::IX(int x, int y) {
+	x = clamp(x, 0, size - 1);
+	y = clamp(y, 0, size - 1);
+
 	return x + size * y;
 }
 
 
-void Fluid::render(Vector2f const& p, RenderWindow& window) {
+void Fluid::render(RenderWindow& window) {
 	for (int x = 0; x < size; x++) {
 		for (int y = 0; y < size; y++) {
-			CircleShape c(5);
-			c.setFillColor(Color(density[IX(x, y)], 0, 0));
-			
-			c.setPosition(p);
-			window.draw(c);
+			RectangleShape r(Vector2f(10, 10));
+			r.setFillColor(Color(density[IX(x, y)], 0, 0));
+			//cout << density[IX(x, y)] << endl;
+			r.setPosition(x*10, y*10);
+			window.draw(r);
 		}
 	}
 }
